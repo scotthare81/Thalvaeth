@@ -10,6 +10,10 @@ You are a **Remnant** — one of the last who still walks the Wild. Leave the **
 
 **Survival & the loop**
 - [SURVIVAL.md](docs/SURVIVAL.md) — Hunger · Thirst · Vigor · Infection
+- [SURVIVAL-IMPLEMENTATION-SPEC.md](docs/SURVIVAL-IMPLEMENTATION-SPEC.md) — exact server-owned meter rules, tuning defaults, thresholds, channels and persistence
+- [SURVIVAL-CRAFTING-V1-SLICE.md](docs/SURVIVAL-CRAFTING-V1-SLICE.md) — pinned first playable Survival + Crafting slice
+- [SURVIVAL-CRAFTING-TEST-VECTORS.md](docs/SURVIVAL-CRAFTING-TEST-VECTORS.md) — deterministic cross-system acceptance cases
+- [SURVIVAL-CRAFTING-CODING-PLAN.md](docs/SURVIVAL-CRAFTING-CODING-PLAN.md) — staged implementation/PR sequence
 - [DIRECTOR.md](docs/DIRECTOR.md) — run pacing (the invisible Stress Director)
 - [MAPS.md](docs/MAPS.md) · [RUN-GATES.md](docs/RUN-GATES.md) — Monastery, Rotwood, gates
 - [CHAR-CREATE.md](docs/CHAR-CREATE.md) · [APTITUDES.md](docs/APTITUDES.md) — the Remnant + charms
@@ -34,6 +38,7 @@ You are a **Remnant** — one of the last who still walks the Wild. Leave the **
 
 **Items · crafting · gear · economy**
 - [MATERIALS.md](docs/MATERIALS.md) → [CRAFTING.md](docs/CRAFTING.md) → [ITEMS.md](docs/ITEMS.md) → [GEAR.md](docs/GEAR.md)
+- [CRAFTING-IMPLEMENTATION-SPEC.md](docs/CRAFTING-IMPLEMENTATION-SPEC.md) — deterministic stations, attempts, recipes, near-misses, consumption and quality contract
 - [ECONOMY.md](docs/ECONOMY.md) — no coin, tiered barter, item bulk
 - [NAMES.md](docs/NAMES.md) — locked player-facing names · [CONTENT.md](docs/CONTENT.md) — item band + trades
 - [TODO.md](docs/TODO.md) — open work

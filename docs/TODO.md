@@ -28,6 +28,10 @@
 - [x] `MATERIALS.md` — raw catalog (dropped / foraged / mined / scavenged, incl. reclaimed metals)
 - [x] `CRAFTING.md` — recipes (food/drink/refining/smelt/forge), discovery (fragments + experiment/hints), stations, durability/mend
 - [x] Discovery tree pinned — Tier 0 given vs milestone gates (Charcoal→Forge spine; tanning, brewing, distilling, preservation, waterproofing)
+- [x] `CRAFTING-IMPLEMENTATION-SPEC.md` — deterministic station/attempt/recipe/near-miss/quality contract
+- [x] `SURVIVAL-CRAFTING-V1-SLICE.md` — exact first Survival + Crafting implementation boundary
+- [x] `SURVIVAL-CRAFTING-TEST-VECTORS.md` — deterministic meter/crafting/cross-system tests
+- [x] `SURVIVAL-CRAFTING-CODING-PLAN.md` — staged coding and PR sequence
 - [x] `GEAR.md` — upgrade-only (no drops): crude dagger + rags start; weapon styles (dual-wield vs 2H); armour classes cloth→plate; slots/axes
 - [x] `ITEMS.md` — made & found catalog (crafting→breaking), invisible quality tiers, + fishing, expanded forage/mushrooms, traps, poisons
 - [x] Armour ladder — full entry→endgame tiers per class (Leather: Boiled/Studded/Hardened; Mail: Ring/Riveted/Splinted; Plate: Half/Full); layering + endgame-per-playstyle
@@ -39,14 +43,30 @@
 - [ ] Assign per-item IDs in the 61xxx material bands
 - [x] Near-miss hint library + authoritative solution/failure matrix (`JOURNAL-HINTS.md`, `DISCOVERY-SOLUTIONS.md`)
 
+### First Survival + Crafting implementation sequence
+
+- [ ] Active-run survival persistence + migration
+- [ ] Fixed server survival tick + centralized tuning values
+- [ ] Vigor field ceiling, walk recovery, Hustle/Short Burst/combat exertion
+- [ ] Interruptible eat/drink/treatment channels
+- [ ] Explicit Infection event API for plague wounds/contaminated consumables
+- [ ] Ash Hollow once-per-run recovery
+- [ ] Server-owned craft attempt engine + ingredient reservation
+- [ ] Born-known recipes: Crude Boil, Roast, Bandage, Firestart
+- [ ] Ash Tea near-miss/discovery chain
+- [ ] Charcoal Pit + Charcoal milestone gate
+- [ ] Filtered water + first Iron Ingot/knife chain
+- [ ] Stitch Kit, Whetstone, Cord, Snare, Rendering/Tallow, Simple Stew
+- [ ] Run all `SURVIVAL-CRAFTING-TEST-VECTORS.md` cases before expanding content
+
 ## Economy
 
 - [ ] `ECONOMY.md` — tiered barter (no coin), material ladder, Monastery keepers
 - [x] Corruption replaced by **Infection** (plague raises, Stitch/tincture cures)
 - [x] Survival interlock — `SURVIVAL.md` (Vigor hub; meters erode Vigor; collapse-only fail)
-- [ ] Survival tuning — Vigor field ceiling + walk trickle; Hunger/Thirst tick vs exertion; Infection rise/cure/Fevered thresholds
+- [x] Survival implementation contract — meter ranges, first-pass tuning, thresholds, channels, persistence (`SURVIVAL-IMPLEMENTATION-SPEC.md`)
 - [ ] Gather satchel — allow-list, size + upgrade curve, lost-on-death
-- [ ] Survival clocks — Hunger + Thirst tuning; raw-meat spoil timer
+- [ ] Raw-meat spoil timer + preservation balance
 
 ## Journal / UI
 
@@ -58,8 +78,9 @@
 - [x] Technical implementation contract — keys, persistence, sync, evaluator, security (`JOURNAL-IMPLEMENTATION-SPEC.md`)
 - [x] UI/interaction contract — tabs, silhouettes, Field Notes, gear-tree behaviour (`JOURNAL-UI-SPEC.md`)
 - [x] First playable slice + end-to-end acceptance scenarios (`JOURNAL-V1-SLICE.md`)
+- [x] Data model, wire protocol, key registry, deterministic tests and coding plan
 
-### First implementation sequence
+### First Journal implementation sequence
 
 - [ ] Generic per-character discovery persistence + discovery service
 - [ ] Versioned HELLO/READY + full Journal snapshot after login and `/reload`
