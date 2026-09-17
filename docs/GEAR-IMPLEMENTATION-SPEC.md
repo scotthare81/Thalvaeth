@@ -10,259 +10,188 @@ This document turns `GEAR.md` into a server-authoritative implementation contrac
 4. Durability creates upkeep and field decisions; it must not permanently delete a persistent weapon or armour piece merely because condition reaches Broken.
 5. Upgrade, repair and salvage mutations are server-authoritative and transactional.
 6. Client/addon code may present state and request actions but may not grant diagrams, improve quality, repair condition or select an upgrade result outside server validation.
+7. One persistent gear instance has one authoritative owner and one authoritative current form.
+8. A visual WotLK item-template swap never means the player obtained a second persistent gear instance.
+9. Known gear construction is deterministic once requirements are met; it is not a gambling/reroll surface.
+10. No future content should require replacing the persistence model merely to add more authored nodes.
 
 ## 2. Persistent gear identity
 
-Every upgradeable persistent piece requires a durable gear-instance identity independent of the underlying WotLK item template. Recommended persisted fields:
-
-- character GUID;
-- gear instance ID;
-- base/archetype key;
-- current upgrade-node key;
-- material/variant key where relevant;
-- hidden quality band/value;
-- condition state and exact durability value;
-- maximum durability after authored modifiers;
-- bound slot/category;
-- crafted/upgraded timestamp and provenance where useful;
-- schema version.
+Every upgradeable persistent piece requires a durable gear-instance identity independent of the underlying WotLK item template. Recommended persisted fields include character GUID, gear instance ID, visible item GUID bridge, archetype key, current node key, material key, hidden quality, exact current/max durability, slot/category, timestamps/provenance where useful and schema version.
 
 Never encode authoritative progression solely in display name, item entry, enchant slot, addon SavedVariables or tooltip text.
 
-## 3. Stable key namespaces
+The persistent identity is the continuity object. `G42` can begin as a Crude Dagger and later be represented visually as an Iron Short Blade without becoming a new progression object.
 
-Use stable data keys rather than player-facing names. Suggested namespaces:
+## 3. Stable keys
 
-- `gear.weapon.*`
-- `gear.armour.*`
-- `gear.tool.*`
-- `gear.pack.*`
-- `gear.charm.*`
-- `upgrade.*`
-- `material.*`
-- `diagram.*`
+Use stable data keys rather than player-facing names. Gear requires namespaces for archetypes/nodes, materials, diagrams, capabilities and wear profiles. Keys survive copy changes; display names can change without invalidating persistence.
 
-Keys survive copy changes. Display names can change without invalidating persistence.
+**Pre-code requirement:** normalize whether persisted graph-node keys use `gear.*` or `upgrade.*`. Draft documents currently use both conceptually; implementation gets exactly one canonical convention.
 
 ## 4. Upgrade graph
 
-Upgrades are an authored directed graph, not an unconstrained stat reroll.
+Upgrades are an authored directed graph, not an unconstrained stat reroll. Each node/edge defines source(s), output form, discovery/process/diagram gates, station, material requirements/substitutions, quality policy, durability transformation, effects and legal next nodes.
 
-Each upgrade node defines at minimum:
-
-- stable node key;
-- allowed source node(s);
-- output archetype/form;
-- required discovery/process gates;
-- required diagram if diagram-gated;
-- required station;
-- exact material families/quantities;
-- optional material substitutions explicitly authored;
-- quality input policy;
-- condition/max-durability transformation policy;
-- resulting combat/survival/tool modifiers;
-- next legal node(s).
-
-The server validates the current gear node before allowing the transition. A client cannot skip directly to a later node.
+The server validates the current node before allowing transition. Graphs may converge and branch. A Bone Blade and Flint Blade may both reach the first Iron form. Branches are explicit choices, not automatically selected by a calculated score.
 
 ## 5. Weapon graph
 
-The first canonical spine is:
+Canonical spine:
 
 `Crude Dagger → Flint/Bone Blade → Iron Knife / Short Blade → Steel Blade → style branch`
 
-The late branch supports:
+Fast line: fighting daggers / one-handed short blades → paired/twin blades.
 
-- fast line: fighting daggers / one-handed short blades → paired/twin blades;
-- heavy line: war cleaver / iron greatblade → steel greatsword or greataxe → masterwork heavy form.
+Heavy line: war cleaver / iron greatblade → steel greatsword or greataxe → masterwork heavy form.
 
-Exact combat coefficients remain balance data, not hard-coded progression logic.
-
-Weapon definitions expose authored axes such as:
-
-- base damage profile;
-- swing cadence;
-- reach class;
-- Vigor cost per attack/action;
-- noise contribution;
-- stagger/cleave/bleed hooks;
-- butcher/chop/tool capability;
-- durability wear profile.
+Weapon definitions expose impact, cadence, reach, Vigor burden, noise, stagger/cleave/bleed hooks, explicit utility capability, wear profile and carried bulk. Exact coefficients remain balance data.
 
 Secondary utility is explicit capability data. A dagger may satisfy butchering; a greataxe may satisfy chopping; a greatsword does not inherit either merely because it is a weapon.
 
-## 6. Material variants
+## 6. Paired weapon representation
 
-Material choice may create side-grades where canon allows it. Iron, steel and bronze are not represented as a single numeric rarity ladder.
+Before dual-wield code lands, choose one persistence model:
 
-For blades, authored material profiles may modify:
+- **logical-set model:** one persistent gear instance represents the pair while the WotLK bridge renders/equips two carriers; or
+- **linked-instance model:** two persistent gear instances are explicitly paired and upgraded/repaired under a linked transaction.
 
-- damage/edge performance;
-- Vigor cost/weight;
-- durability maximum;
-- wear rate;
-- repair material requirements.
+The chosen model must define durability, repair cost, death persistence, item-template bridging and missing-carrier recovery. Do not let WotLK main/off-hand mechanics decide this accidentally.
 
-Current canon intent: steel holds an edge well; bronze can be lighter but softer/faster-wearing; iron is reliable/common. Exact multipliers are balance data and require tests before lock.
+## 7. Material variants
 
-## 7. Armour graph
+Iron, steel and bronze are authored side-grade/material profiles where allowed, not a universal rarity ladder. Profiles may modify edge/impact, Vigor/weight, max durability, wear and repair family.
 
-Armour follows authored class progression:
+Current intent: iron reliable/common; steel best conventional edge retention/strong structure; bronze lighter but softer/faster wearing. Exact multipliers remain balance data. Material modifiers stay bounded so weapon form matters more than metal gimmicks.
 
-- Cloth/Rags;
-- Leather;
-- Mail;
-- Plate.
+## 8. Armour graph
 
-The body piece establishes the dominant class for presentation/build rules, while individual worn pieces contribute their own authored noise, Vigor and protection modifiers.
+Armour classes are Cloth/Rags → Leather → Mail → Plate, with Tanning, Smelting/Iron and Steelworking/Forge gates. The body establishes dominant presentation/build class, while actual pieces contribute their own effects.
 
-Progression gates remain:
+Mail/plate layering over quilted base is a real dependency; implementation must not accidentally consume/delete the persistent underlayer. Hardened Leather and Splinted Mail remain valid late/endgame destinations even after Plate is known.
 
-- Leather → Tanning;
-- Mail → Smelting/Iron;
-- Plate → Steelworking/Forge.
+## 9. Supporting slots
 
-Mail/plate layering over a quilted base remains a design dependency; implementation must not accidentally consume/delete the persistent underlayer when upgrading outer armour.
+Head, hands, feet, legs/waders, back/pack and warmth slots contribute authored survival axes rather than blindly copying body tier. Pack capacity remains Inventory authority. Shirt/tabard/neck remain warmth/weather layers independent of armour class.
 
-## 8. Hidden quality
+Do not implement future cold/heat penalties merely because these slots reserve warmth data; environmental effects activate only when those systems are designed.
 
-Crafted/upgraded gear carries server-owned hidden quality consistent with `CRAFTING.md` and `ITEMS.md`.
+## 10. Hidden quality
 
-Rules:
+Gear carries server-owned hidden quality consistent with Crafting/Items. No rarity colour, stars or numeric quality is player-facing. Quality can affect edge retention, max durability, mitigation/tool effectiveness and other authored bands.
 
-- no rarity colour, stars or numeric quality score player-facing;
-- quality affects authored performance bands such as edge retention, maximum durability, mitigation or tool effectiveness;
-- input quality biases result according to the crafting quality model;
-- quality cannot be rerolled by cancelling, reconnecting, moving containers or repeatedly opening UI;
-- an upgrade attempt obtains its result once at transaction commit;
-- stack semantics never apply to unique persistent gear instances.
+Quality cannot be rerolled by cancelling, reconnecting, moving containers, reopening UI, repairing or logging in. An upgrade obtains its result once at transaction commit. Player-facing clues may use names/descriptions and felt performance, but strings are not authority.
 
-Player-facing clues may use names/descriptions and felt performance, but those strings are not authority.
+**Open before code:** define quality inheritance when substantially rebuilding the same persistent item. Previous workmanship should matter somehow if continuity is meaningful, but exact weighting against new material quality must be canonical and shared with Crafting.
 
-## 9. Durability model
+## 11. Durability model
 
-Canonical player-facing condition bands:
+Player-facing bands are:
 
 `Fine → Worn → Damaged → Broken`
 
-Internally store integer current/max durability so wear is deterministic and testable. Condition bands derive from thresholds in data/config; do not persist only the label.
+Store integer current/max durability; derive the band. Provisional test thresholds:
 
-Recommended first thresholds for testing, explicitly provisional until balance pass:
-
-- Fine: > 70%
-- Worn: > 35% to 70%
-- Damaged: > 0% to 35%
+- Fine: >70%
+- Worn: >35–70%
+- Damaged: >0–35%
 - Broken: 0%
 
-Broken means severe loss of function/performance, **not item deletion**.
+Broken is severe impairment, never automatic deletion. Normal v1 presentation should prefer qualitative bands; GM/debug may show exact current/max.
 
-## 10. Wear events
+## 12. Condition effects
 
-Wear must come from explicit server events.
+Condition modifies the effective profile, not the base definition.
 
-Weapons/tools may wear from:
+- Fine: full profile.
+- Worn: mainly an upkeep signal with mild degradation.
+- Damaged: clearly compromised; meaningful push/extract decision.
+- Broken: severe impairment.
 
-- successful combat strikes;
-- selected blocked/parried/heavy-impact events if authored;
-- butchering/chopping/mining/tool actions;
-- special high-stress actions.
+Condition must not accidentally grant advantages: damaged armour does not become quieter/lighter, and a damaged heavy weapon does not become cheaper in Vigor unless explicitly authored. Temporary poisons/buffs remain separate.
 
-Armour may wear from:
+## 13. Wear events
 
-- mitigated incoming physical damage;
-- selected creature attacks/abilities;
-- environmental damage only where explicitly authored.
+Wear comes from explicit semantic server events, never elapsed time. Weapons/tools may wear from combat contacts and authored tool actions; armour from qualifying incoming impacts/abilities; environment only when explicitly authored.
 
-Do not apply durability loss from arbitrary elapsed time.
+One gameplay event cannot double-apply wear through multiple hooks. Centralize mutation/use idempotent event identity. Semantic classes such as light/standard/heavy/severe convert through form/material profiles into exact integer loss.
 
-One gameplay event must not double-apply wear through multiple hooks. Centralize wear mutation or use an idempotent event token.
+## 14. Broken behaviour
 
-## 11. Broken behaviour
+Broken gear remains owned/equipped/stored, receives severe authored effectiveness penalties, may lose advanced utility, remains repairable, survives death and cannot generate a free replacement copy. Normal feedback should indicate that proper structural work is required where applicable.
 
-At Broken:
+## 15. Sharpening vs repair
 
-- item remains owned and equipped/stored unless normal slot rules require otherwise;
-- weapon/tool effectiveness receives a severe authored penalty and advanced utility may be disabled;
-- armour mitigation is severely reduced;
-- the item remains repairable;
-- death does not delete it;
-- Broken cannot be exploited to obtain free replacement copies.
+**Sharpening:** blade-focused, whetstone-supported, potentially field-usable, bounded restoration, cannot reconstruct structural failure.
 
-Exact Broken penalties are balance data. V1 tests need only prove the state transition and that the item persists.
+**Structural repair:** station-appropriate, material-consuming restoration at Forge/Stitch Table/Workbench as appropriate.
 
-## 12. Sharpening vs repair
+V1 may use one durability pool while preserving distinct action rules. A later edge/structure split must not change gear identity. Field sharpening extends a run; it must not make home repair irrelevant.
 
-Sharpening and structural repair are separate concepts.
-
-**Sharpening**:
-- primarily bladed weapons/tools;
-- whetstone-supported;
-- may be allowed in the field;
-- restores edge/sharpness-related condition only within authored limits;
-- cannot reconstruct a structurally Broken item unless an explicit field-repair recipe says so.
-
-**Repair/mending**:
-- station-appropriate structural restoration;
-- Forge for metal weapons/heavy armour;
-- Stitch Table for cloth/leather;
-- Workbench for suitable tools/packs/components;
-- consumes authored materials;
-- server validates station, gear instance, reservation and output state.
-
-V1 may use one durability pool per item while retaining distinct action rules; a later edge/structure split must not require changing gear identity.
-
-## 13. Upgrade transaction
+## 16. Upgrade transaction
 
 Canonical order:
 
-1. receive upgrade intent for gear instance + target node;
-2. verify ownership and no conflicting reservation;
-3. verify current node can reach target;
-4. verify required Journal/discovery/process/diagram knowledge;
-5. verify correct Monastery station;
-6. resolve and reserve exact materials;
-7. verify resulting item can remain in/equip to a legal location;
-8. compute quality/result exactly once;
-9. atomically consume materials and mutate gear instance;
-10. persist gear state;
-11. emit Journal/UI delta and audit event;
-12. release reservation.
+1. receive gear instance + target intent;
+2. verify ownership/reservation;
+3. validate source→target edge;
+4. validate Journal/process/diagram knowledge;
+5. validate canonical station/context;
+6. resolve/reserve exact materials;
+7. preflight legal equipment/container/bulk result;
+8. establish durable prepared operation if required;
+9. compute one-time quality/result;
+10. atomically consume materials + mutate gear;
+11. update visible item-template bridge without duplicating identity;
+12. persist gear/transaction outcome;
+13. emit safe Journal/UI/audit delta;
+14. release reservations.
 
-Failure before commit does not consume inputs unless the relevant crafting failure contract explicitly defines destructive experimentation. Known gear upgrades/repairs should normally be deterministic once requirements are met.
+Known upgrades normally consume nothing on pre-commit failure. Experimentation failure semantics belong to Crafting and must not be accidentally applied to already-known station work.
 
-## 14. Repair transaction
+## 17. Repair transaction
 
-Repair follows the same reservation/atomicity rules. A reconnect, duplicate click or station-close cannot consume materials twice or apply repair twice.
+Repair uses the same reservation/idempotency rules. Duplicate click, reconnect or station-close cannot consume twice or apply twice.
 
-Repair policy must explicitly define whether maximum durability can degrade after repeated structural repairs. **V1 default: no permanent max-durability erosion.** This avoids an unreviewed gear-destruction treadmill; such a system can be added later only deliberately.
+V1 has **no permanent max-durability erosion**. Repair inputs should semantically match the item: cloth/thread, leather/cord, rings/rivets, plate/metal/fittings, etc.
 
-## 15. Death/run interaction
+## 18. Salvage/destruction
 
-Persistent equipped/upgraded gear survives run death with its current gear identity, quality and durability state. Death does not automatically restore condition.
+Broken is not salvage. Automatic destruction of persistent gear is forbidden.
 
-If the player dies with a Damaged weapon, they wake in their Monastery quarters with that weapon still Damaged. Death is not a free repair.
+If voluntary dismantling arrives later it must be explicit, home/station based, confirmed, transactional and have an authored salvage return. V1 omits voluntary destruction of core persistent gear.
 
-At-risk spare gear semantics must follow the Inventory risk-class contract rather than being inferred from “gear” as a category. V1 should avoid introducing lootable replacement gear until that policy is explicitly exercised by tests.
+## 19. Death/run interaction
 
-## 16. Inventory/bulk interaction
+Persistent equipped/upgraded gear survives death with exact identity, quality and durability. Death does not repair it. A Damaged weapon is still Damaged when the Remnant wakes in personal quarters.
 
-Worn/wielded gear contributes zero carried bulk under the current Inventory contract. Unequipped/spare gear uses authored bulk values and requires available main-bag capacity.
+At-risk spare gear follows the Inventory risk-class contract, not the word “gear.” Run finalization must freeze/reconcile conflicting gear/inventory transactions before classifying contents.
 
-An equip/unequip, upgrade or form-change that changes bulk must preflight destination capacity atomically.
+## 20. Inventory/bulk interaction
 
-No upgrade may use a temporary container move to bypass capacity.
+Worn/wielded gear has zero carried bulk under current Inventory canon. Spare gear uses authored bulk and needs main-bag capacity. Equip/unequip/form-change preflights capacity atomically. No temporary move can bypass bulk.
 
-## 17. Journal integration
+Pack progression is Gear content but capacity remains Inventory authority; equipping a visual pack template alone cannot alter capacity.
 
-Gear Journal presentation reads server-owned knowledge:
+## 21. Journal integration
 
-- unknown upgrade silhouettes remain obscured;
-- discovered diagrams/processes reveal only the appropriate node/branch;
-- owning materials does not automatically reveal an unknown upgrade;
-- successfully creating/upgrading may promote the corresponding gear knowledge according to Journal rules;
-- hidden quality values never leak through Journal payloads.
+Unknown upgrades remain silhouettes/obscured; diagrams/processes reveal only appropriate knowledge; owning materials does not reveal recipes; successful work can promote knowledge according to Journal rules; hidden quality never leaks.
 
-## 18. Diagnostics
+Unknown nodes should not be transmitted merely so Lua can hide them.
+
+Responsibilities remain distinct: **Journal = what I know; Gear = what I own/wear; Station = what work I can perform here.**
+
+## 22. Station interaction
+
+Stations are authoritative contexts, not menu flavour. Validate canonical station key, proximity/context, ownership/location, knowledge, materials/reservations, transition/repair legality and destination capacity.
+
+Closing UI does not undo committed work. Moving away before a channelled/prepared action commits cancels safely.
+
+## 23. Definition/version safety
+
+Stable keys outlive builds. Balance coefficient changes normally flow through definitions; removed/renamed persisted nodes require migration mapping; unknown definitions are quarantined/logged rather than reset; quality never rerolls because definitions changed; template changes never alter persistent identity.
+
+## 24. Diagnostics
 
 Required before content expansion. Suggested commands:
 
@@ -271,23 +200,31 @@ Required before content expansion. Suggested commands:
 - `.thal gear damage <instance> <amount>`
 - `.thal gear repair <instance>` dev-only
 - `.thal gear grant-diagram <key>` through Journal authority
-- `.thal gear upgrade-test <instance> <node>` dev-only dry-run where possible
+- `.thal gear upgrade-test <instance> <node>` dev-only
+- `.thal gear transactions <instance>`
+- `.thal gear reconcile <transaction>`
+- `.thal gear bridge <instance>`
 
-Debug output may expose hidden values to authorized GMs but never normal clients.
+GM output may expose hidden values; normal clients never receive them. Destructive recovery logs before/after state.
 
-## 19. Acceptance criteria
+## 25. Acceptance criteria
 
 Implementation is ready to expand when tests prove:
 
-1. gear instance identity survives relog/restart/death;
-2. upgrade graph cannot be skipped;
-3. missing discovery/diagram/station/material requirements reject safely;
-4. duplicate upgrade/repair requests cannot double-consume or double-apply;
-5. hidden quality is rolled once and remains stable;
-6. wear transitions deterministically through condition bands;
-7. Broken gear persists and can be repaired;
-8. death preserves exact durability rather than repairing/deleting gear;
-9. field sharpening cannot bypass structural repair rules;
-10. inventory bulk/capacity remains valid through equip/unequip/form changes;
-11. Journal/UI cannot reveal unknown nodes or hidden quality;
-12. restart during mutation reconciles without item duplication or loss.
+1. identity survives relog/restart/death;
+2. graph cannot be skipped;
+3. missing knowledge/diagram/station/material rejects safely;
+4. duplicate mutation cannot double-consume/apply;
+5. quality rolls once and persists;
+6. wear/bands are deterministic;
+7. Broken persists and repairs;
+8. death preserves exact durability;
+9. sharpening cannot bypass structural repair;
+10. bulk remains valid through form/equip changes;
+11. Journal/UI cannot leak unknown nodes/quality;
+12. restart reconciliation cannot duplicate/lose gear;
+13. template swaps preserve one persistent identity;
+14. invalid definitions never erase progression;
+15. explicit capabilities prevent name/category tool leakage;
+16. condition penalties cannot create accidental Vigor/noise advantages;
+17. first fast/heavy branch children are mechanically distinct through data hooks, not damage alone.
