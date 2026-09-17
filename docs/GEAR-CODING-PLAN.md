@@ -107,14 +107,27 @@ Only after the foundation is proven:
 - separate edge/structure condition if playtesting justifies it;
 - polished station/quarters presentation.
 
-## Before first code PR
+## Required design decisions before first code PR
 
-Reconcile existing documentation contradictions that affect Gear:
+These are explicit blockers rather than implementation choices:
 
-1. exact canonical `station.*` keys between Crafting runtime/implementation/station docs;
-2. failure-consumption vocabulary where gear experimentation touches Crafting;
-3. Journal final state/protocol contract (PR #12 wins over older conceptual values);
-4. Inventory risk semantics for spare gear carried into runs;
-5. confirm Crude Butcher/butcher capability naming and registry keys.
+1. **Canonical graph-node namespace.** Draft docs conceptually use both `gear.*` and `upgrade.*`; choose one persisted convention and normalize all Gear docs/fixtures.
+2. **Canonical station keys.** Reconcile Crafting runtime/implementation/station docs and use one `station.*` registry.
+3. **Paired weapons identity.** Decide whether paired/twin weapons are one logical persistent gear instance representing the set or two linked persistent instances. This materially affects repair, durability, equip slots and transactions.
+4. **Quality inheritance.** Define how previous workmanship quality and new material quality contribute when the same persistent gear is substantially rebuilt. The result must be one-time/deterministic at commit.
+5. **Spare gear risk.** Inventory/Run canon must explicitly say what happens to a persistent-quality spare weapon/armour piece carried in the main bag on death before such items are enabled.
+6. **Butcher terminology.** Confirm Crude Butcher/Butcher Knife/skinning-knife capability and stable registry naming.
+7. **Diagram policy.** Pin which early transitions are discoverable and which branch/tier transitions are diagram-only.
+8. **Repair channel policy.** Decide whether field sharpening is instant or channelled in v1; structural repairs remain home/station work.
+9. **Condition presentation.** Confirm normal UI uses qualitative bands only in v1 rather than exact durability percentage.
+10. **Dual-wield combat bridge.** Verify how the WotLK chassis will represent the authored paired-weapon form before locking the persistent representation.
+
+## Documentation contradictions to reconcile before code
+
+1. Journal PR #12 final state/protocol contract wins over older conceptual Journal values/protocol.
+2. Crafting failure-consumption vocabulary must be unified where gear experimentation touches Crafting.
+3. Preserve Journal solution-matrix highest-unresolved-blocker behaviour; repeated same failure must not leak a lower clue.
+4. Survival exact 0–10000 implementation model wins over older normalized runtime wording.
+5. Inventory/run branch semantics must be merged/accepted or this stacked Gear branch retargeted before implementation begins.
 
 Do not encode unresolved documentation contradictions into C++.
