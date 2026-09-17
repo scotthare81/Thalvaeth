@@ -16,7 +16,7 @@ The first slice proves the core extraction promise:
 - Raw Meat spoil metadata plumbing;
 - extraction finalization;
 - death finalization;
-- Monastery morgue return;
+- death recovery by waking in bed in the Remnant's personal quarters / place of residence within Thal'vaeth Monastery;
 - reconnect/restart reconciliation;
 - debug tooling.
 
@@ -24,6 +24,8 @@ The first slice proves the core extraction promise:
 
 - footprint-grid inventory;
 - corpse recovery;
+- explaining how the Remnant returns to the Monastery after dying in a district;
+- detailed quarters decoration/progression systems;
 - insurance;
 - multiplayer loot ownership;
 - account-wide stash sharing;
@@ -53,11 +55,14 @@ Persistent worn examples: Crude Dagger, Rag Armour, Rag Hood, equipped charms wh
 9. Successful extraction finalizes haul and returns home.
 10. Repeat run; deliberately die.
 11. Second run's haul disappears while persistent equipped gear and prior extracted stock remain.
-12. Relog/restart tests prove neither outcome can be replayed.
+12. Death recovery places the Remnant in bed in their personal Monastery quarters.
+13. Relog/restart tests prove neither outcome can be replayed.
 
 ## 5. Required integration with existing systems
 
 Journal discoveries are persistent and never deleted by run death. Survival active-run values resume on reconnect and reset after legitimate death/extraction home return. Crafting reservations use the shared inventory reservation layer. Director/gates request lifecycle transitions but do not mutate inventory directly.
+
+The quarters are a presentation/home-space contract. Backend run code should target a stable neutral home recovery spawn identifier rather than embedding room lore into lifecycle logic.
 
 ## 6. Acceptance scenarios
 
@@ -69,7 +74,7 @@ C. Equip/unequip demonstrates worn-free bulk and safe failure if no room to uneq
 
 D. Extract a mixed haul; verify home ownership exactly once.
 
-E. Die with equivalent haul; verify loss exactly once and persistent kit retained.
+E. Die with equivalent haul; verify loss exactly once, persistent kit retained, and Remnant wakes at the bed recovery point in their quarters.
 
 F. Disconnect mid-run; resume same haul/meters.
 
