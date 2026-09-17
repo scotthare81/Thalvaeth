@@ -14,6 +14,10 @@ You are a **Remnant** — one of the last who still walks the Wild. Leave the **
 - [SURVIVAL-CRAFTING-V1-SLICE.md](docs/SURVIVAL-CRAFTING-V1-SLICE.md) — pinned first playable Survival + Crafting slice
 - [SURVIVAL-CRAFTING-TEST-VECTORS.md](docs/SURVIVAL-CRAFTING-TEST-VECTORS.md) — deterministic cross-system acceptance cases
 - [SURVIVAL-CRAFTING-CODING-PLAN.md](docs/SURVIVAL-CRAFTING-CODING-PLAN.md) — staged implementation/PR sequence
+- [RUN-LIFECYCLE-SPEC.md](docs/RUN-LIFECYCLE-SPEC.md) — authoritative run entry, extraction, death, reconnect and crash-recovery transaction contract
+- [INVENTORY-RUN-V1-SLICE.md](docs/INVENTORY-RUN-V1-SLICE.md) — first playable inventory/extraction risk loop
+- [INVENTORY-RUN-TEST-VECTORS.md](docs/INVENTORY-RUN-TEST-VECTORS.md) — capacity, duplication, death/extraction race and restart tests
+- [INVENTORY-RUN-CODING-PLAN.md](docs/INVENTORY-RUN-CODING-PLAN.md) — staged backend implementation plan
 - [DIRECTOR.md](docs/DIRECTOR.md) — run pacing (the invisible Stress Director)
 - [MAPS.md](docs/MAPS.md) · [RUN-GATES.md](docs/RUN-GATES.md) — Monastery, Rotwood, gates
 - [CHAR-CREATE.md](docs/CHAR-CREATE.md) · [APTITUDES.md](docs/APTITUDES.md) — the Remnant + charms
@@ -39,6 +43,8 @@ You are a **Remnant** — one of the last who still walks the Wild. Leave the **
 **Items · crafting · gear · economy**
 - [MATERIALS.md](docs/MATERIALS.md) → [CRAFTING.md](docs/CRAFTING.md) → [ITEMS.md](docs/ITEMS.md) → [GEAR.md](docs/GEAR.md)
 - [CRAFTING-IMPLEMENTATION-SPEC.md](docs/CRAFTING-IMPLEMENTATION-SPEC.md) — deterministic stations, attempts, recipes, near-misses, consumption and quality contract
+- [INVENTORY-IMPLEMENTATION-SPEC.md](docs/INVENTORY-IMPLEMENTATION-SPEC.md) — main bag/satchel authority, bulk, provenance, spoilage and anti-duplication rules
+- [INVENTORY-RUNTIME-SPEC.md](docs/INVENTORY-RUNTIME-SPEC.md) — low-level movement, stacking, reservation and finalization contracts
 - [ECONOMY.md](docs/ECONOMY.md) — no coin, tiered barter, item bulk
 - [NAMES.md](docs/NAMES.md) — locked player-facing names · [CONTENT.md](docs/CONTENT.md) — item band + trades
 - [TODO.md](docs/TODO.md) — open work
