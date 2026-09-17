@@ -7,6 +7,24 @@
 - **Tiers are gated by the discovery tree** — leather needs Tanning, mail needs Smelting, plate needs Steelworking (the Charcoal→Forge spine).
 - Look holds L15: patchwork → worn-but-better. Even late gear reads as survived-in, not parade armour.
 
+## Implementation-ready contracts
+
+This file owns the broad design and progression fantasy. The implementation-ready contracts are:
+
+- [GEAR-IMPLEMENTATION-SPEC.md](GEAR-IMPLEMENTATION-SPEC.md) — authority, identity, durability, upgrade/repair transactions;
+- [GEAR-RUNTIME-SPEC.md](GEAR-RUNTIME-SPEC.md) — runtime services, effect resolution and WotLK bridge;
+- [GEAR-DATA-CONTRACT.md](GEAR-DATA-CONTRACT.md) — registry/persistence/data shapes and versioning;
+- [GEAR-UPGRADE-GRAPH.md](GEAR-UPGRADE-GRAPH.md) — stable progression graph semantics;
+- [GEAR-CONTENT-MATRIX.md](GEAR-CONTENT-MATRIX.md) — progression gates/material intent/authoring checklist;
+- [GEAR-BALANCE-FRAMEWORK.md](GEAR-BALANCE-FRAMEWORK.md) — weapon/armour tradeoff and upkeep tuning framework;
+- [GEAR-PLAYER-EXPERIENCE.md](GEAR-PLAYER-EXPERIENCE.md) — player-facing knowledge, station and durability experience;
+- [GEAR-FAILURE-RECOVERY.md](GEAR-FAILURE-RECOVERY.md) — crash/race/dupe/loss recovery contract;
+- [GEAR-TEST-VECTORS.md](GEAR-TEST-VECTORS.md) — deterministic acceptance tests;
+- [GEAR-V1-SLICE.md](GEAR-V1-SLICE.md) — first playable proof;
+- [GEAR-CODING-PLAN.md](GEAR-CODING-PLAN.md) — staged implementation sequence.
+
+Where an older conceptual statement here conflicts with a later implementation-ready contract, resolve the contradiction in documentation before C++ rather than choosing silently in code.
+
 ---
 
 ## Starting loadout (Tier 0)
@@ -179,6 +197,8 @@ The same fixed kit becomes a **stealth** build (low-noise cowl/boots/leather), a
 | Diagram gating | Which upgrade tiers are experiment-able vs diagram-only |
 | Charm slots | 2 slots, aptitude vs passive — pinned in [APTITUDES.md](APTITUDES.md); confirm count |
 | Tier count | Confirm 4 vs 3 steps per line |
+| Paired weapons | Decide whether paired/twin weapons are one logical persistent gear instance or two linked instances before implementation |
+| Quality inheritance | Decide exact weighting of previous workmanship vs new material quality during major rebuilds |
 | Cold as a factor | Warmth is an environmental fit for now — **snow runs** would make cold a real gate; decide if cold becomes a tracked factor/meter ([MAPS.md](MAPS.md)) |
 
 ---
