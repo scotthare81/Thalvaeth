@@ -25,23 +25,28 @@
 
 ## Items & crafting
 
-- [x] `MATERIALS.md` — raw catalog (dropped / foraged / mined / scavenged, incl. reclaimed metals)
-- [x] `CRAFTING.md` — recipes (food/drink/refining/smelt/forge), discovery (fragments + experiment/hints), stations, durability/mend
-- [x] Discovery tree pinned — Tier 0 given vs milestone gates (Charcoal→Forge spine; tanning, brewing, distilling, preservation, waterproofing)
-- [x] `CRAFTING-IMPLEMENTATION-SPEC.md` — deterministic station/attempt/recipe/near-miss/quality contract
-- [x] `SURVIVAL-CRAFTING-V1-SLICE.md` — exact first Survival + Crafting implementation boundary
-- [x] `SURVIVAL-CRAFTING-TEST-VECTORS.md` — deterministic meter/crafting/cross-system tests
-- [x] `SURVIVAL-CRAFTING-CODING-PLAN.md` — staged coding and PR sequence
-- [x] `GEAR.md` — upgrade-only (no drops): crude dagger + rags start; weapon styles (dual-wield vs 2H); armour classes cloth→plate; slots/axes
-- [x] `ITEMS.md` — made & found catalog (crafting→breaking), invisible quality tiers, + fishing, expanded forage/mushrooms, traps, poisons
-- [x] Armour ladder — full entry→endgame tiers per class (Leather: Boiled/Studded/Hardened; Mail: Ring/Riveted/Splinted; Plate: Half/Full); layering + endgame-per-playstyle
-- [x] Weapon ladder — entry→endgame (shared early blade → dual-wield vs 2H); iron/steel/bronze tradeoffs; weapon-as-tool utility (butcher/wood)
-- [ ] Gear tuning — per-slot wear rates, tier count (3 vs 4), diagram gating, skinning-knife slot for 2H builds
-- [ ] Item tuning — per-item IDs (60xxx), poison balance, fish/trap yields, mushroom tells
-- [x] Bulk model — items have bulk 1/2/4; bags/satchel are bulk pools (worn = free); v1 = capacity budget
-- [ ] Fancy grid inventory (future) — footprint UI in ThalvaethUI + server-side virtual inventory (bulk values become footprints)
+- [x] `MATERIALS.md` — raw catalog
+- [x] `CRAFTING.md` — recipes, discovery, stations, durability/mend
+- [x] Discovery tree pinned — Charcoal→Forge spine plus tanning/brewing/distilling/preservation/waterproofing
+- [x] `CRAFTING-IMPLEMENTATION-SPEC.md`
+- [x] `SURVIVAL-CRAFTING-V1-SLICE.md`
+- [x] `SURVIVAL-CRAFTING-TEST-VECTORS.md`
+- [x] `SURVIVAL-CRAFTING-CODING-PLAN.md`
+- [x] `GEAR.md` — upgrade-only gear canon
+- [x] `ITEMS.md` — made/found catalog
+- [x] Armour ladder
+- [x] Weapon ladder
+- [ ] Gear tuning — per-slot wear rates, tier count, diagram gating, skinning-knife slot for 2H builds
+- [ ] Item tuning — per-item IDs, poison balance, fish/trap yields, mushroom tells
+- [x] Bulk model — bulk 1/2/4; worn free; v1 capacity budget
+- [x] `INVENTORY-IMPLEMENTATION-SPEC.md` — authoritative main bag/satchel, bulk, provenance, spoilage and anti-duplication contract
+- [x] `INVENTORY-RUNTIME-SPEC.md` — movement, stacking, reservations and finalization runtime contract
+- [x] `INVENTORY-RUN-V1-SLICE.md` — exact first inventory/extraction playable slice
+- [x] `INVENTORY-RUN-TEST-VECTORS.md` — deterministic capacity/death/extraction/race/restart tests
+- [x] `INVENTORY-RUN-CODING-PLAN.md` — staged implementation PR sequence
+- [ ] Fancy grid inventory (future)
 - [ ] Assign per-item IDs in the 61xxx material bands
-- [x] Near-miss hint library + authoritative solution/failure matrix (`JOURNAL-HINTS.md`, `DISCOVERY-SOLUTIONS.md`)
+- [x] Near-miss hint library + authoritative solution/failure matrix
 
 ### First Survival + Crafting implementation sequence
 
@@ -49,7 +54,7 @@
 - [ ] Fixed server survival tick + centralized tuning values
 - [ ] Vigor field ceiling, walk recovery, Hustle/Short Burst/combat exertion
 - [ ] Interruptible eat/drink/treatment channels
-- [ ] Explicit Infection event API for plague wounds/contaminated consumables
+- [ ] Explicit Infection event API
 - [ ] Ash Hollow once-per-run recovery
 - [ ] Server-owned craft attempt engine + ingredient reservation
 - [ ] Born-known recipes: Crude Boil, Roast, Bandage, Firestart
@@ -57,61 +62,88 @@
 - [ ] Charcoal Pit + Charcoal milestone gate
 - [ ] Filtered water + first Iron Ingot/knife chain
 - [ ] Stitch Kit, Whetstone, Cord, Snare, Rendering/Tallow, Simple Stew
-- [ ] Run all `SURVIVAL-CRAFTING-TEST-VECTORS.md` cases before expanding content
+- [ ] Run all Survival/Crafting test vectors
+
+## Run lifecycle + inventory
+
+- [x] `RUN-LIFECYCLE-SPEC.md` — PREPARING→ACTIVE→FINALIZING→EXTRACTED/DEAD state machine; reconnect/restart rules
+- [x] Death contract — haul/satchel lost, persistent equipped gear + discoveries retained, morgue return
+- [x] Extraction contract — server validation, idempotent haul promotion, Survival reset, home return
+- [x] Death/extraction race and crash-reconciliation behaviour pinned
+- [x] Satchel allow-list and provisional v1 capacity: main bag 12 bulk / satchel 16 bulk
+- [x] Run provenance + reservation semantics pinned
+
+### First Inventory + Run implementation sequence
+
+- [ ] Run lifecycle persistence + unique active-run guard
+- [ ] PREPARING/ACTIVE/FINALIZING/terminal service + debug dump/reconcile
+- [ ] Bulk registry + satchel allow-list + 12/16 capacity service
+- [ ] Server acquisition/move validation; worn gear free
+- [ ] Run item provenance tied to run ID
+- [ ] Shared crafting/survival item reservation layer
+- [ ] Extraction finalization guard + haul promotion/deposit + ledger
+- [ ] Death finalization + at-risk deletion + persistent-kit preservation + morgue
+- [ ] Death/extraction race hardening
+- [ ] Restart reconciliation for PREPARING/ACTIVE/FINALIZING runs
+- [ ] Block Hearth/ordinary teleport extraction bypass
+- [ ] Raw Meat spoil metadata/split/merge plumbing
+- [ ] Minimal ThalvaethUI bulk/satchel presentation
+- [ ] Run all `INVENTORY-RUN-TEST-VECTORS.md` cases before expanding inventory
 
 ## Economy
 
-- [ ] `ECONOMY.md` — tiered barter (no coin), material ladder, Monastery keepers
-- [x] Corruption replaced by **Infection** (plague raises, Stitch/tincture cures)
-- [x] Survival interlock — `SURVIVAL.md` (Vigor hub; meters erode Vigor; collapse-only fail)
-- [x] Survival implementation contract — meter ranges, first-pass tuning, thresholds, channels, persistence (`SURVIVAL-IMPLEMENTATION-SPEC.md`)
-- [ ] Gather satchel — allow-list, size + upgrade curve, lost-on-death
-- [ ] Raw-meat spoil timer + preservation balance
+- [ ] `ECONOMY.md` — tiered barter implementation (no coin), material ladder, Monastery keepers
+- [x] Corruption replaced by **Infection**
+- [x] Survival interlock — `SURVIVAL.md`
+- [x] Survival implementation contract
+- [x] Gather satchel design/implementation contract — allow-list, bounded bulk, lost-on-death
+- [ ] Satchel upgrade curve tuning beyond v1 16-bulk start
+- [ ] Raw-meat spoil timer tuning + preservation balance
 
 ## Journal / UI
 
 - [x] Creature journal table + addon wire stub
-- [x] Journal Record design — **Creatures / Survival / Gear** tabs, silhouettes/obscured knowledge, persistent near-miss hints (`JOURNAL-RECORD.md`)
-- [x] Concrete Journal content/reveal map (`JOURNAL-CONTENT.md`)
-- [x] Canonical hint library (`JOURNAL-HINTS.md`)
-- [x] Authoritative discovery/solution matrix (`DISCOVERY-SOLUTIONS.md`)
-- [x] Technical implementation contract — keys, persistence, sync, evaluator, security (`JOURNAL-IMPLEMENTATION-SPEC.md`)
-- [x] UI/interaction contract — tabs, silhouettes, Field Notes, gear-tree behaviour (`JOURNAL-UI-SPEC.md`)
-- [x] First playable slice + end-to-end acceptance scenarios (`JOURNAL-V1-SLICE.md`)
+- [x] Journal Record design
+- [x] Concrete Journal content/reveal map
+- [x] Canonical hint library
+- [x] Authoritative discovery/solution matrix
+- [x] Technical implementation contract
+- [x] UI/interaction contract
+- [x] First playable slice + acceptance scenarios
 - [x] Data model, wire protocol, key registry, deterministic tests and coding plan
 
 ### First Journal implementation sequence
 
 - [ ] Generic per-character discovery persistence + discovery service
-- [ ] Versioned HELLO/READY + full Journal snapshot after login and `/reload`
-- [ ] GM/debug Journal tooling (dump/grant/revoke/reset/force-sync)
-- [ ] Build tabbed Journal shell in `ThalvaethUI` with loading state
-- [ ] Render Creature tab: Unknown silhouette → Sighted → Engaged/observed
-- [ ] Wire observed creature abilities into persistent journal keys
-- [ ] Implement first Survival slice: born-known basics + Ashbloom/Ash Tea
-- [ ] Implement deterministic near-miss evaluator + one-hint-per-attempt persistence
-- [ ] Implement Charcoal discovery gate + filtration inference
-- [ ] Implement Stitch path, Ashbloom/Gravecap layered material knowledge
-- [ ] Implement one fishing catch (Eel), one Snare, Whetstone
-- [ ] Render Gear slice with Crude Dagger → Iron Knife → Steel Blade and obscured branch sibling
-- [ ] Implement one diagram-gated weapon branch that cannot be brute-forced
-- [ ] Implement Stillstone + Deep-Lung Token as active/passive charm examples
-- [ ] Run all `JOURNAL-V1-SLICE.md` acceptance scenarios, including random-spam resistance and character isolation
-- [ ] Journal art polish only after functional discovery loop is proven
+- [ ] Versioned HELLO/READY + full Journal snapshot
+- [ ] GM/debug Journal tooling
+- [ ] Tabbed Journal shell/loading
+- [ ] Creature Unknown→Sighted→Engaged/observed
+- [ ] Persistent observed creature abilities
+- [ ] Born-known basics + Ashbloom/Ash Tea
+- [ ] Deterministic near-miss evaluator + one-hint persistence
+- [ ] Charcoal gate + filtration inference
+- [ ] Stitch path, Ashbloom/Gravecap layered knowledge
+- [ ] Eel, Snare, Whetstone
+- [ ] Gear slice + obscured sibling
+- [ ] Diagram-gated weapon branch
+- [ ] Stillstone + Deep-Lung Token
+- [ ] Run Journal v1 acceptance scenarios
+- [ ] Art polish last
 
 ## Aptitudes & charms
 
-- [x] Charm/aptitude items — charms grant aptitudes (2 slots; aptitude vs passive); craft from materials; invisible quality; upgradeable
-- [ ] Confirm charm slot count; pick which proposed aptitudes (Night Eyes / Iron Gut / Deadened Step / Steady Hand / Second Wind) ship v1
+- [x] Charm/aptitude items — 2-slot design currently assumed; aptitude vs passive; craft/upgrade
+- [ ] Confirm charm slot count; choose proposed v1 aptitudes
 
 ## Client / branding
 
-- [x] Brand concept set — splash, wordmark logo, circular seal, red-eyes emblem (`docs/branding/`)
-- [x] `CLIENT-BRANDING.md` — login-reskin + patch-MPQ plan (concept-stage)
-- [ ] Rebuild the wordmark in real weathered-serif type (verify "Thal'vaeth" spelling; esp. the seal's curved ring)
-- [ ] Produce shippable assets (BLP export, login dimensions) + original login music
-- [ ] Decide: crest-only vs crest + corner wordmark; blood-red vs ash-orange accent
-- [ ] Build the login glue patch (hide 3D scene → static splash; strings/version/copyright)
+- [x] Brand concept set
+- [x] `CLIENT-BRANDING.md`
+- [ ] Rebuild wordmark in real weathered-serif type
+- [ ] Produce shippable BLP/login assets + original login music
+- [ ] Decide crest/wordmark/accent treatment
+- [ ] Build login glue patch
 
 ## Core
 
