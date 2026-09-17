@@ -7,186 +7,130 @@
 - **Tiers are gated by the discovery tree** — leather needs Tanning, mail needs Smelting, plate needs Steelworking (the Charcoal→Forge spine).
 - Look holds L15: patchwork → worn-but-better. Even late gear reads as survived-in, not parade armour.
 
----
+## Implementation-ready contracts
 
-## Starting loadout (Tier 0)
+This file owns the broad design and progression fantasy. The implementation-ready contracts are:
 
-Crude and minimal. Everything else is crafted/added.
+- [GEAR-IMPLEMENTATION-SPEC.md](GEAR-IMPLEMENTATION-SPEC.md) — authority, identity, durability, upgrade/repair transactions;
+- [GEAR-RUNTIME-SPEC.md](GEAR-RUNTIME-SPEC.md) — runtime services, effect resolution and WotLK bridge;
+- [GEAR-DATA-CONTRACT.md](GEAR-DATA-CONTRACT.md) — registry/persistence/data shapes and versioning;
+- [GEAR-UPGRADE-GRAPH.md](GEAR-UPGRADE-GRAPH.md) — stable progression graph semantics;
+- [GEAR-CONTENT-MATRIX.md](GEAR-CONTENT-MATRIX.md) — progression gates/material intent/authoring checklist;
+- [GEAR-BALANCE-FRAMEWORK.md](GEAR-BALANCE-FRAMEWORK.md) — weapon/armour tradeoff and upkeep tuning framework;
+- [GEAR-PLAYER-EXPERIENCE.md](GEAR-PLAYER-EXPERIENCE.md) — player-facing knowledge, station and durability experience;
+- [GEAR-FAILURE-RECOVERY.md](GEAR-FAILURE-RECOVERY.md) — crash/race/dupe/loss recovery contract;
+- [EQUIPMENT-CONTRACT.md](EQUIPMENT-CONTRACT.md) — logical equipment roles, paired weapons, tools, layering, packs and swapping;
+- [EQUIPMENT-TEST-VECTORS.md](EQUIPMENT-TEST-VECTORS.md) — deterministic equipment/paired-weapon acceptance cases;
+- [COMBAT-IMPLEMENTATION-SPEC.md](COMBAT-IMPLEMENTATION-SPEC.md) — attack lifecycle, Vigor, reach, damage, stagger, bleed, cleave, noise, interruption and Broken combat;
+- [COMBAT-RUNTIME-SPEC.md](COMBAT-RUNTIME-SPEC.md) — server action IDs, timing, spatial resolver, status/noise/reaction services and AzerothCore bridge;
+- [COMBAT-WEAPON-BEHAVIOUR.md](COMBAT-WEAPON-BEHAVIOUR.md) — dagger/paired/greatsword/greataxe combat identity and move grammar;
+- [COMBAT-CREATURE-REACTIONS.md](COMBAT-CREATURE-REACTIONS.md) — anatomy, stagger personality, hearing, AI reactions and creature attack grammar;
+- [COMBAT-TEST-VECTORS.md](COMBAT-TEST-VECTORS.md) — deterministic combat acceptance cases;
+- [COMBAT-V1-SLICE.md](COMBAT-V1-SLICE.md) — first playable combat proof;
+- [COMBAT-CODING-PLAN.md](COMBAT-CODING-PLAN.md) — staged combat implementation sequence;
+- [GEAR-TEST-VECTORS.md](GEAR-TEST-VECTORS.md) — deterministic Gear acceptance tests;
+- [GEAR-V1-SLICE.md](GEAR-V1-SLICE.md) — first playable Gear proof;
+- [GEAR-CODING-PLAN.md](GEAR-CODING-PLAN.md) — staged Gear implementation sequence.
 
-| Slot | Start | Note |
-|------|-------|------|
-| Main hand | **Crude Dagger** | Chipped, scrap-bound; also your first butcher tool |
-| Body | **Rag Armour** (cloth) | Basically rags — near-zero protection |
-| Head | Rag Hood | Scrap hood |
-| Bag | Small Brown Pouch (+ gather satchel) | Tiny carry |
+Where an older conceptual statement here conflicts with a later implementation-ready contract, resolve the contradiction in documentation before C++ rather than choosing silently in code.
 
-Hands, feet, waders, pack, charms, a real weapon — all earned through crafting.
+## Starting loadout
 
----
+The Remnant begins with a Crude Dagger, Rag Armour, Rag Hood and small pack/gather satchel. Hands, feet, improved pack, charms and serious weapons are earned through crafting and discovery.
 
-## Weapons — one blade early, two styles late
+## Weapons
 
-Everyone starts with the **crude dagger** and climbs a shared early line: `Crude Dagger → Fitted Knife/Short Blade (iron) → Steel Blade`. **Late-game the line forks into a style you commit to** (needs Forge/Steel + a discovered diagram) — this is the high-end choice:
+Everyone starts with the Crude Dagger and climbs the shared early line:
 
-| Style | Forms | Feel | Tradeoffs |
-|-------|-------|------|-----------|
-| **Dual-wield (fast)** | Paired 1H **swords** or **daggers** | Flurry, bleed, mobile | Low per-hit; **daggers also butcher well** — fight + harvest with one kit |
-| **Two-handed (heavy)** | **Greatsword** or **Greataxe** | Slow swing, huge hits, stagger/cleave | Heavy: high **Vigor** cost per swing, slow, **loud**; a **poor butcher tool** → you still need a skinning knife |
+`Crude Dagger → Flint/Bone Blade → Iron Knife / Short Blade → Steel Blade`
 
-**The butcher-tool tension:** a knife stays useful no matter what. Dual-daggers do double duty (combat + butchering); a 2H build trades harvest convenience for raw power and must carry a dedicated skinning knife. That's a real build decision, not just a damage number.
+At Steel the combat line can commit toward fast paired weapons or heavy two-handed weapons.
 
-**Carried bulk:** a **two-handed** weapon is *huge* (bulk 4), a **1H** is *bulky* (2), a **dagger** is *small* (1) — so dual-daggers are cheap to stow, a greataxe is a real haul. Worn/wielded gear is free; only spares in the bag count ([ECONOMY.md](ECONOMY.md)).
+### Fast style
 
-**Weapon upgrade axes:** damage · speed · reach · bleed · butcher yield · durability.
-**Materials:** haft (deadwood/green wood), edge (iron → steel → bronze), inlay (bone/tusk/fang for grips & weight).
-**Durability:** blades dull with use → **sharpen** (whetstone, field-ok) or **mend** (forge). Broken = heavy penalty, never lost ([CRAFTING.md](CRAFTING.md)).
+Paired daggers/shortswords are a **single matched persistent weapon set**. They have one Gear identity, one quality result, one durability pool and one upgrade/repair path even though the WotLK client may need two visible weapon carriers.
 
----
+This is now canonical. The player upgrades *their paired weapon set*, not two independent daggers.
 
-### The weapon ladder — entry to endgame
+Fast weapons emphasize cadence, mobility and bleed at lower per-hit impact. Dagger forms also retain explicit butcher capability. Combat depth comes from close spacing, low individual commitment, bounded bleed pressure and the temptation to overspend Vigor through repeated attacks.
 
-Weapons climb **material tiers** (gated by the discovery tree — metal needs Charcoal→Forge, keen edges need Steelworking) and **fork into a style** at the top. Every blade rolls an **invisible quality** (*"keen"* vs *"chipped"*) and **dulls with use** ([CRAFTING.md](CRAFTING.md)).
+### Heavy style
 
-**Shared early line (before you commit)**
+Greatswords, greataxes and heavy cleavers are one persistent two-handed weapon each. They emphasize impact, reach, stagger/cleave and higher Vigor/noise cost.
 
-| Tier | Weapon | Made from | Note |
-|------|--------|-----------|------|
-| Start | **Crude Dagger** | bound scrap | Also your first butcher tool |
-| Pre-forge | **Flint / Bone Blade** | knapped flint / bone | Crude but sharp; no metal yet |
-| Iron | **Iron Knife / Short Blade** | iron + haft (needs Forge) | First real blade |
-| Steel | **Steel Blade** | steel + haft | Keen, holds an edge — commit to a style here |
+A Greatsword is combat-only by default. A Greataxe may chop wood. A War Cleaver may butcher heavy. Heavy builds therefore still benefit from carrying a dedicated skinning knife.
 
-**Dual-wield line — fast** *(bulk 1–2)*
+Heavy combat is deliberately committed: missing still spends Vigor, recovery remains, and loud impacts can make the surrounding district more dangerous.
 
-| Tier | Weapon | Feel |
-|------|--------|------|
-| Entry | **Fighting Dagger / 1H Shortsword** (iron) | Quick, low per-hit |
-| Mid | **Paired Daggers / Steel Shortswords** | Flurry, bleed |
-| Endgame | **Twin Blades** (masterwork daggers or 1H swords) | Fast, mobile, bleed-heavy; **daggers also butcher** |
+### Combat authority
 
-**Two-handed line — heavy** *(bulk 4)*
+Combat is not stock WotLK auto-attack progression. Attacks are server-authoritative actions with wind-up, commit, active and recovery phases. Vigor is spent at commitment whether the attack later hits or whiffs. The server resolves reach, facing, target geometry, damage, stagger, bleed, cleave, noise and durability wear.
 
-| Tier | Weapon | Feel |
-|------|--------|------|
-| Entry | **War Cleaver / Iron Greatblade** | Slow, big; cleaver also butchers heavy |
-| Mid | **Steel Greatsword / Greataxe** | Huge hits, stagger / cleave |
-| Endgame | **Masterwork Greatsword / Greataxe** | Max damage, reach, stagger; **poor butcher → carry a skinning knife**; the **greataxe also chops wood** (deadwood → charcoal) |
+Fast and heavy are different decision rhythms rather than simple DPS tiers. See the Combat contracts above.
 
-**Material tradeoffs — a side choice, not just "up":**
+### Weapon bulk
 
-| Metal | Feel |
-|-------|------|
-| Iron | Reliable, common scrap |
-| Steel | Keen, holds its edge longest — best blades |
-| Bronze | **Lighter** (less Vigor per swing) but **softer** (dulls faster → more upkeep) — a Vigor-light side-grade |
+Worn/wielded gear is free under the Inventory bulk contract. Carried spares use authored bulk. Current intent is dagger 1, one-handed 2, paired set 2 and heavy/two-handed 4, all tunable data values.
 
-**Secondary utility (a weapon is also a survival tool):** daggers/knife **butcher**; the **greataxe chops wood**; the **cleaver** butchers heavy. A pure greatsword is combat-only — strongest in a fight, but you'll still haul a knife. Your weapon shapes your survival economy, not just your damage number.
+## Armour
 
-## Armour — weight classes (rags → plate)
+Armour progresses through Cloth/Rags, Leather, Mail and Plate, but heavier is a build choice rather than a universal upgrade. Protection trades against noise, Vigor burden and mobility.
 
-Armour climbs **weight classes**, each gated by a discovery and each a **build identity** — heavier trades quiet and stamina for survivability. It is *not* just a bigger number.
+The body establishes dominant armour-class identity, while actual worn pieces contribute their own effects. Mixed equipment remains legal unless explicitly prohibited.
 
-| Class | Gate | Protection | Survival cost |
-|-------|------|-----------|---------------|
-| **Cloth / Rags** (start) | — | ~none | Silent; no Vigor cost — pure stealth |
-| **Leather** | Tanning | Light + a little Infection-resist | Quiet; cheap Vigor — mobile |
-| **Mail** | Smelting / Iron | Medium + Infection-resist | Heavier: more Vigor drain, more noise |
-| **Plate** (late) | Steelworking / Forge | Max + best Infection-resist | Heavy: big Vigor drain, **loud**, slower |
+Quilted/gambeson layers remain meaningful under Mail/Plate and are persistent logical gear. Native WotLK slot limitations must not cause the underlayer to be consumed or forgotten.
 
-So light armour (cloth/leather) is the **stealth/hauler** — quiet past Sleepers, cheap on Vigor; **plate** is the **fighter** who trades silence and stamina for staying alive in a stand-up fight. The body piece sets the class; other slots match its weight.
+## Equipment roles
 
-### The armour ladder — entry to endgame
+Thal'vaeth uses logical equipment roles rather than allowing native WotLK slots to dictate game design. These include Head, Body, Shirt, Tabard, Neck, Hands, Legs/Waist, Feet, Back/Pack, Weapon, Utility/Tool and two Charm roles.
 
-Each class is gated by a discovery ([CRAFTING.md](CRAFTING.md)); within a class you climb named tiers by upgrading (materials + a found diagram), and every piece still rolls an **invisible quality** ([ITEMS.md](ITEMS.md) — *"well-stitched"* vs *"patched"*). Heavier tiers = more mitigation & Infection-resist, but more **Vigor** drain, more **noise**, and less speed.
+Shirt/Tabard/Neck remain the independent warmth layer. Back/Pack controls authoritative capacity. Pack visuals alone never alter capacity, and a downgrade/unequip cannot create inventory overflow.
 
-**Cloth — start, no gate**
+Weapon roles distinguish single, paired and heavy weapons. A dedicated skinning knife can be available as a logical tool without requiring it to remain visibly equipped beside a two-handed weapon.
 
-| Tier | Name | Made from | Feel |
-|------|------|-----------|------|
-| Entry | **Rag Armour** | rags (starting kit) | ~no protection; silent; free Vigor |
-| Top | **Quilted Coat** (gambeson) | cloth + padding + thread | Light protection; still quiet; also the **base layer** under mail/plate |
+See [EQUIPMENT-CONTRACT.md](EQUIPMENT-CONTRACT.md) for the authoritative mapping and transaction rules.
 
-**Leather — gate: Tanning** *(the stealth / mobility line)*
+## Durability
 
-| Tier | Name | Made from | Feel |
-|------|------|-----------|------|
-| Entry | **Boiled Leather** | cured hide + cord | Light protection; quiet; cheap Vigor |
-| Mid | **Studded Leather** | leather + rivets/studs | More cover; a touch heavier/louder |
-| Endgame | **Hardened Leather** (lamellar) | heavy leather + bone/tusk plates | Strong *for its weight* — the stealth build's endgame |
+Player-facing condition remains:
 
-**Mail — gate: Smelting / Iron** *(the balanced middle; worn over a quilted base)*
+`Fine → Worn → Damaged → Broken`
 
-| Tier | Name | Made from | Feel |
-|------|------|-----------|------|
-| Entry | **Ring Mail** | salvaged iron rings + leather | Medium protection + some Infection-resist; heavier |
-| Mid | **Riveted Chain** | drawn wire → riveted rings | Better coverage |
-| Endgame | **Splinted Mail** | mail + iron splints | Top mail; bridges toward plate |
+Broken means severe impairment, not deletion. Gear persists through death with its exact condition. Death and extraction are never free repairs.
 
-**Plate — gate: Steelworking** *(the fighter's line; over mail + gambeson)*
+Blades may be sharpened with a whetstone where allowed; structural repair uses the appropriate Monastery station. Paired weapons are sharpened/repaired as one logical set.
 
-| Tier | Name | Made from | Feel |
-|------|------|-----------|------|
-| Entry | **Half-Plate** | steel plates over mail | High protection + best Infection-resist; heavy (big Vigor drain, loud, slow) |
-| Endgame | **Full Plate** | full steel harness | Max mitigation & Infection-resist; slowest, loudest, most Vigor-hungry |
+In combat, Broken is a severe degraded profile: edge/bleed/stagger/cleave/tool capability can fall sharply or selected advanced attacks can lock out. A Broken heavy weapon does not conveniently become cheap to swing simply because it performs badly.
 
-**No single "best."** There isn't one endgame set — there's an endgame **per playstyle**: **Hardened Leather** for the silent, Vigor-light runner; **Full Plate** for the stand-and-fight tank; **Splinted Mail** for the balance. Your armour *is* your build.
+## Upgrading
 
-**Layering.** Mail and plate sit over a **Quilted Coat** — so cloth never goes obsolete, it becomes the underlayer. The **warmth layer** (shirt/tabard/neck) is separate and independent of class (above).
+Upgrades require the correct authored combination of current gear node, discovered process/diagram, station and materials. Hidden quality is resolved server-side and persists; it is not a rarity colour or client-visible numeric roll.
 
-**Sets, not pieces.** The **body** piece sets the class; cowl, wraps, waders, boots, and pack come in matching weights (a leather set has leather boots and cowl). You can mix — a mail body with a light cowl — at a coherence cost: every heavier piece adds to your total Vigor drain and noise. Worn armour is free on **bulk**; a spare set in the bag is bulky/huge by class ([ECONOMY.md](ECONOMY.md)).
+The Gear instance survives a form/template change. Upgrading a dagger into a later weapon does not destroy the persistent identity and create an unrelated loot item.
 
----
+## Open decisions before code
 
-## Slots & upgrade axes (couple to survival)
+The paired-weapon identity question is closed: **one logical persistent matched set**.
 
-| Slot | Piece | Upgrade axes → |
-|------|-------|----------------|
-| Head | Cowl/Hood | Noise ↓ (sneak → Vigor economy), light |
-| Body | Coat (cloth→plate) | Mitigation, **Infection-resist**, some warmth |
-| **Shirt** | Under-layer (padded/fur) | **Warmth** — independent of armour class |
-| **Tabard** | Over-wrap / mantle | **Warmth** + sheds weather |
-| **Neck** | Scarf / muffler | **Warmth** + covers the face (cold/fog) |
-| Hands | Wraps/Gloves | Butcher yield, grip, mend efficiency |
-| Legs/waist | Waders | Wet districts, carry |
-| Feet | Boots | Noise, footing/speed |
-| Back | Pack | Main-bag slots **+ satchel size** |
-| Main hand | Blade (see Weapons) | Damage/speed/reach/bleed/butcher |
-| Utility | whetstone / torch / focus | Situational |
-| Charm ×2 | aptitude / passive charms | Run up to 2 aptitudes, **or** trade a slot for a Vigor / Infection-resist / warmth perk ([APTITUDES.md](APTITUDES.md)) |
+Combat now also locks the behavioural architecture while deliberately leaving numeric tuning as data.
 
-The same fixed kit becomes a **stealth** build (low-noise cowl/boots/leather), a **fighter** (plate + heavy blade), or a **hauler** (pack/carry) — build diversity from upgrade choices, every upgrade a materials decision against barter and consumables.
+Still requiring explicit cross-system resolution before implementation:
 
-> **Warmth layer (shirt, tabard & neck slots).** WotLK's cosmetic **shirt**/**tabard** slots and the **neck** slot are co-opted for a **warmth layer** — a padded/fur under-shirt, a mantle/wrap, and a scarf/muffler (covers the face in cold or fog), crafted from fur/pelt/padding ([CRAFTING.md](CRAFTING.md)). Warmth is deliberately **independent of armour class** so a light-armour stealth build isn't forced into plate to stay warm. It's an **environmental fit** (like waders for wet): it offsets **cold** (night, weather, **snow runs**) that would otherwise tax Vigor/Hunger — and in **heat** (Burn spaces) *too much* warmth backfires into Thirst. The slots stack for deep cold.
-
----
-
-## Upgrading — how it works
-
-1. Bring **materials** + a **discovered diagram** (found knowledge — the "find" that replaces gear drops, [MATERIALS.md](MATERIALS.md) §10) to the right **Monastery station**.
-2. The tier must be **unlocked on the discovery tree** ([CRAFTING.md](CRAFTING.md)) — no plate before Steelworking.
-3. **Quality (Model C)** applies: better inputs → weighted-better result. No skill levels.
-
-**Tier depth (default, tunable):** ~4 steps per line — weapons `Crude → Fitted → Reinforced → Masterwork`; armour `Cloth → Leather → Mail → Plate`. Bounded — v1.0 ships complete (L14).
-
----
-
-## Open
-
-| Item | Notes |
-|------|-------|
-| Slot list | Confirm final slots (dedicated skinning-knife/off-hand for 2H builds?) |
-| Wear rates | Per-slot degrade + sharpen/mend costs |
-| Diagram gating | Which upgrade tiers are experiment-able vs diagram-only |
-| Charm slots | 2 slots, aptitude vs passive — pinned in [APTITUDES.md](APTITUDES.md); confirm count |
-| Tier count | Confirm 4 vs 3 steps per line |
-| Cold as a factor | Warmth is an environmental fit for now — **snow runs** would make cold a real gate; decide if cold becomes a tracked factor/meter ([MAPS.md](MAPS.md)) |
-
----
+- exact canonical `station.*` key spellings;
+- exact stable weapon/armour/attack keys before persisted data ships;
+- quality inheritance weighting across major rebuilds;
+- Inventory death-risk semantics for carried spare persistent gear;
+- exact combat-time weapon-swap/channel rule;
+- final per-weapon Vigor/timing/reach/damage/stagger/bleed/noise values;
+- first reviewed Rotwood creature anatomy/stagger/hearing profiles;
+- exact native AzerothCore combat paths to suppress/reuse;
+- which upgrade edges are discoverable vs diagram-only;
+- whether cold becomes a tracked environmental factor rather than only future-fit equipment data.
 
 ## Related
 
 - [CRAFTING.md](CRAFTING.md) — recipes, discovery tree, stations, durability
 - [MATERIALS.md](MATERIALS.md) — upgrade materials + diagrams
-- [SURVIVAL.md](SURVIVAL.md) — noise / Vigor / Infection that gear tunes
+- [SURVIVAL.md](SURVIVAL.md) — noise / Vigor / Infection that gear and combat consume
 - [APTITUDES.md](APTITUDES.md) — charm-slot aptitude items
-- [CONTENT.md](CONTENT.md) — spawn kit
+- [CONTENT.md](CONTENT.md) — starting/content kit
