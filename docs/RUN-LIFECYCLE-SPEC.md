@@ -95,8 +95,12 @@ Death means:
 - persistent character discoveries survive;
 - Journal knowledge survives;
 - Monastery stock already extracted before this run survives;
-- run-local Survival state is cleared on morgue/home recovery;
-- character is returned to the Monastery morgue rather than permanent deletion.
+- run-local Survival state is cleared on home recovery;
+- the Remnant wakes in bed in their **personal quarters / place of residence within Thal'vaeth Monastery** rather than being permanently deleted.
+
+The quarters are the canonical death-recovery location. They are a lived-in room belonging to the Remnant, not a morgue. The exact room layout, decoration and later progression features are presentation/content concerns and may evolve independently of the run lifecycle.
+
+The game does **not** need to explain how the Remnant physically returned from the district. The run system records the death and recovery outcome without establishing a transport/rescue explanation in canon.
 
 No corpse-recovery loop is required in v1. Lost haul is gone.
 
@@ -113,9 +117,11 @@ Recommended order:
 7. preserve persistent equipped kit;
 8. write death ledger/audit result;
 9. reset Survival/run-local state;
-10. revive/transfer to Monastery morgue through controlled server path;
+10. revive/transfer the character to the **bed recovery point in the Remnant's personal quarters** through a controlled server path;
 11. mark run DEAD;
 12. release guard.
+
+The server-facing spawn should use a neutral stable recovery identifier (for example `home_recovery_spawn` or equivalent), not lore-specific terminology such as `morgue`. This keeps lifecycle code independent from room dressing while preserving the quarters/bed presentation contract.
 
 Repeated death callbacks after finalization are no-ops for inventory.
 
@@ -221,5 +227,6 @@ The lifecycle is implementation-ready when tests prove:
 5. disconnect never grants extraction or resets pressure;
 6. crash/restart cannot duplicate or rescue haul;
 7. normal teleports cannot bypass extraction;
-8. Monastery reset occurs only through a legitimate terminal/home transition;
-9. a finalized run cannot be replayed.
+8. legitimate death recovery returns the Remnant to the bed in their Monastery quarters;
+9. Monastery reset occurs only through a legitimate terminal/home transition;
+10. a finalized run cannot be replayed.
